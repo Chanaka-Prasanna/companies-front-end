@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI/ML Job Tracker</title>
+    <style>
+      /* Basic Reset & Font */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        background-color: #f4f7f6; /* Light grayish background */
+        color: #333;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Container Styling */
+      .container {
+        background-color: #ffffff; /* White background for content */
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 900px; /* Max width for larger screens */
+        margin-bottom: 30px;
+      }
+
+      h1,
+      h2 {
+        color: #0056b3; /* Primary blue color */
+        margin-bottom: 20px;
+        text-align: center;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 10px;
+      }
+
+      /* Form Styling */
+      form {
+        display: grid;
+        grid-template-columns: 1fr; /* Single column layout */
+        gap: 20px; /* Spacing between form elements */
+        margin-bottom: 30px;
+      }
+
+      @media (min-width: 600px) {
+        form#addForm {
+          grid-template-columns: repeat(
+            2,
+            1fr
+          ); /* Two columns on larger screens */
+        }
+        /* Make checkbox group span full width */
+        .form-group.full-width {
+          grid-column: 1 / -1;
+        }
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      label {
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #555;
+      }
+
+      input[type="text"],
+        input[type="url"], /* Added type=url for website */
+        input[type="search"],
+        select {
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus,
+      input[type="url"]:focus,
+      input[type="search"]:focus,
+      select:focus {
+        border-color: #0056b3;
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 86, 179, 0.3);
+      }
+
+      /* Checkbox Styling */
+      .checkbox-group label {
+        font-weight: normal; /* Normal weight for checkbox labels */
+        margin-bottom: 0;
+      }
+      .checkbox-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px; /* Spacing between checkboxes */
+        padding-top: 5px;
+      }
+
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 5px; /* Space between checkbox and its label */
+      }
+
+      input[type="checkbox"] {
+        margin-right: 5px;
+        accent-color: #0056b3; /* Modern checkbox color */
+        width: 16px;
+        height: 16px;
+      }
+
+      /* Button Styling */
+      button {
+        padding: 12px 20px;
+        background: linear-gradient(
+          135deg,
+          #007bff,
+          #0056b3
+        ); /* Gradient blue */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: bold;
+        transition: background 0.3s ease, transform 0.1s ease;
+        justify-self: start; /* Align button to the start in grid */
+      }
+      /* Make add button span full width in its grid cell area if needed */
+      #addForm button[type="submit"] {
+        grid-column: 1 / -1; /* Span across columns */
+        justify-self: center; /* Center the button */
+        max-width: 200px; /* Optional: Limit button width */
+      }
+
+      button:hover {
+        background: linear-gradient(
+          135deg,
+          #0056b3,
+          #003d80
+        ); /* Darker gradient on hover */
+      }
+      button:active {
+        transform: scale(0.98); /* Slight shrink on click */
+      }
+
+      /* Table Styling */
+      .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        table-layout: fixed; /* Helps with column widths */
+        word-wrap: break-word; /* Break long words like URLs */
+      }
+
+      .results-table th,
+      .results-table td {
+        border: 1px solid #e0e0e0;
+        padding: 12px 15px;
+        text-align: left;
+      }
+
+      .results-table thead {
+        background-color: #0056b3; /* Header background */
+        color: #ffffff; /* Header text color */
+      }
+
+      .results-table th {
+        font-weight: bold;
+      }
+      /* Set approximate column widths */
+      .results-table th:nth-child(1) {
+        width: 25%;
+      } /* Company Name */
+      .results-table th:nth-child(2) {
+        width: 20%;
+      } /* Country */
+      .results-table th:nth-child(3) {
+        width: 25%;
+      } /* Website */
+      .results-table th:nth-child(4) {
+        width: 20%;
+      } /* Positions */
+      .results-table th:nth-child(5) {
+        width: 10%;
+      } /* Date */
+
+      .results-table tbody tr:nth-child(even) {
+        background-color: #f8f9fa; /* Zebra striping */
+      }
+
+      .results-table tbody tr:hover {
+        background-color: #e9ecef; /* Hover effect */
+      }
+      /* Style for website link */
+      .website-link {
+        color: #0056b3;
+        text-decoration: none;
+      }
+      .website-link:hover {
+        text-decoration: underline;
+      }
+
+      /* Filter Section */
+      #filterSection {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+      }
+      #filterForm {
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fit,
+          minmax(150px, 1fr)
+        ); /* Responsive grid */
+        gap: 15px;
+        align-items: end; /* Align items to the bottom */
+      }
+
+      /* Feedback Area */
+      #feedback {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        font-weight: bold;
+        display: none; /* Hidden by default */
+      }
+      #feedback.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+      #feedback.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+      #loadingIndicator {
+        text-align: center;
+        margin-top: 20px;
+        font-style: italic;
+        color: #666;
+        display: none; /* Hidden by default */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI/ML Job Application Tracker</h1>
+
+      <form id="addForm">
+        <div class="form-group">
+          <label for="companyName">Company Name:</label>
+          <input type="text" id="companyName" name="companyName" required />
+        </div>
+        <div class="form-group">
+          <label for="country">Country:</label>
+          <input type="text" id="country" name="country" required />
+        </div>
+        <div class="form-group full-width">
+          <!-- {/* Span full width */} -->
+          <label for="companyWebsite">Company Website:</label>
+          <input
+            type="url"
+            id="companyWebsite"
+            name="companyWebsite"
+            placeholder="https://www.example.com"
+          />
+        </div>
+
+        <div class="form-group full-width">
+          <label>Available Positions:</label>
+          <!-- {/* Updated Label */} -->
+          <div class="checkbox-container">
+            <!-- {/* Updated Checkboxes */} -->
+            <div class="checkbox-item">
+              <input
+                type="checkbox"
+                id="roleAI"
+                name="availablePositions"
+                value="AI"
+              />
+              <label for="roleAI">AI</label>
+            </div>
+            <div class="checkbox-item">
+              <input
+                type="checkbox"
+                id="roleML"
+                name="availablePositions"
+                value="ML"
+              />
+              <label for="roleML">ML</label>
+            </div>
+            <div class="checkbox-item">
+              <input
+                type="checkbox"
+                id="roleSE"
+                name="availablePositions"
+                value="SE"
+              />
+              <label for="roleSE">SE</label>
+            </div>
+            <div class="checkbox-item">
+              <input
+                type="checkbox"
+                id="roleDS"
+                name="availablePositions"
+                value="DS"
+              />
+              <label for="roleDS">Data Science (DS)</label>
+            </div>
+            <div class="checkbox-item">
+              <input
+                type="checkbox"
+                id="rolePM"
+                name="availablePositions"
+                value="PM"
+              />
+              <label for="rolePM">Product Manager (PM)</label>
+            </div>
+            <div class="checkbox-item">
+              <input
+                type="checkbox"
+                id="roleBA"
+                name="availablePositions"
+                value="BA"
+              />
+              <label for="roleBA">Business Analyst (BA)</label>
+            </div>
+          </div>
+        </div>
+        <button type="submit">Add Company Entry</button>
+      </form>
+
+      <div id="feedback"></div>
+    </div>
+
+    <div class="container">
+      <h2>Tracked Companies</h2>
+
+      <form id="filterForm">
+        <div class="form-group">
+          <label for="filterCompany">Filter by Company:</label>
+          <input
+            type="search"
+            id="filterCompany"
+            name="filterCompany"
+            placeholder="Enter company name..."
+          />
+        </div>
+        <div class="form-group">
+          <label for="filterCountry">Filter by Country:</label>
+          <input
+            type="search"
+            id="filterCountry"
+            name="filterCountry"
+            placeholder="Enter country..."
+          />
+        </div>
+        <div class="form-group">
+          <label for="filterPosition">Filter by Position:</label>
+          <!-- {/* Changed ID and Name */} -->
+          <select id="filterPosition" name="filterPosition">
+            <!-- {/* Changed ID and Name */} -->
+            <option value="">All Positions</option>
+            <!-- {/* Updated Options */} -->
+            <option value="AI">AI</option>
+            <option value="ML">ML</option>
+            <option value="SE">SE</option>
+            <option value="DS">Data Science (DS)</option>
+            <option value="PM">Product Manager (PM)</option>
+            <option value="BA">Business Analyst (BA)</option>
+          </select>
+        </div>
+        <button type="submit">Apply Filters</button>
+      </form>
+
+      <div id="loadingIndicator">Loading data...</div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            {/* Updated Headers */}
+            <th>Company Name</th>
+            <th>Country</th>
+            <th>Website</th>
+            <th>Available Positions</th>
+            <th>Date Added</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <script>
+      const addForm = document.getElementById("addForm");
+      const filterForm = document.getElementById("filterForm");
+      const resultsBody = document.getElementById("resultsBody");
+      const feedbackDiv = document.getElementById("feedback");
+      const loadingIndicator = document.getElementById("loadingIndicator");
+
+      // Backend API endpoint (adjust if your backend runs on a different port)
+      const API_URL = "http://127.0.0.1:5000"; // Default Flask development server URL
+
+      // ---- Function to display feedback messages ----
+      function showFeedback(message, type = "success") {
+        feedbackDiv.textContent = message;
+        feedbackDiv.className = type; // 'success' or 'error'
+        feedbackDiv.style.display = "block"; // Ensure it's visible
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          feedbackDiv.textContent = "";
+          feedbackDiv.className = "";
+          feedbackDiv.style.display = "none";
+        }, 5000);
+      }
+
+      // ---- Function to fetch and display companies ----
+      async function fetchAndDisplayCompanies(filters = {}) {
+        loadingIndicator.style.display = "block";
+        resultsBody.innerHTML = ""; // Clear existing results
+        feedbackDiv.style.display = "none"; // Hide feedback area
+
+        // Construct query parameters string from filters
+        const queryParams = new URLSearchParams(filters).toString();
+        const fetchUrl = `${API_URL}/get_companies?${queryParams}`;
+
+        try {
+          const response = await fetch(fetchUrl);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const companies = await response.json();
+
+          if (companies.length === 0) {
+            resultsBody.innerHTML =
+              '<tr><td colspan="5" style="text-align:center;">No matching companies found.</td></tr>';
+          } else {
+            companies.forEach((company) => {
+              const row = resultsBody.insertRow();
+              row.insertCell(0).textContent = company.companyName;
+              row.insertCell(1).textContent = company.country;
+
+              // Create link for website if available
+              const websiteCell = row.insertCell(2);
+              if (company.companyWebsite) {
+                const link = document.createElement("a");
+                link.href = company.companyWebsite;
+                // Ensure URL has protocol for linking
+                if (
+                  !link.href.startsWith("http://") &&
+                  !link.href.startsWith("https://")
+                ) {
+                  link.href = "http://" + company.companyWebsite; // Default to http if missing
+                }
+                link.textContent = company.companyWebsite; // Show the URL as text
+                link.target = "_blank"; // Open in new tab
+                link.rel = "noopener noreferrer"; // Security best practice
+                link.classList.add("website-link");
+                websiteCell.appendChild(link);
+              } else {
+                websiteCell.textContent = "N/A";
+              }
+
+              row.insertCell(3).textContent = company.availablePositions
+                ? company.availablePositions.join(", ")
+                : "N/A";
+              // Format date nicely
+              row.insertCell(4).textContent = company.dateAdded
+                ? new Date(company.dateAdded).toLocaleDateString()
+                : "N/A"; // Just date part
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching companies:", error);
+          showFeedback(
+            "Error fetching data. Is the backend server running?",
+            "error"
+          );
+          resultsBody.innerHTML =
+            '<tr><td colspan="5" style="text-align:center; color: red;">Error loading data.</td></tr>';
+        } finally {
+          loadingIndicator.style.display = "none";
+        }
+      }
+
+      // ---- Event Listener for Adding a Company ----
+      addForm.addEventListener("submit", async (event) => {
+        event.preventDefault(); // Prevent default form submission
+        feedbackDiv.style.display = "none"; // Hide previous feedback
+
+        const formData = new FormData(addForm);
+        const companyData = {
+          companyName: formData.get("companyName"),
+          country: formData.get("country"),
+          companyWebsite: formData.get("companyWebsite"), // Get website
+          // Get all checked available positions
+          availablePositions: formData.getAll("availablePositions"), // Use the updated name
+        };
+
+        // Basic validation
+        if (!companyData.companyName || !companyData.country) {
+          showFeedback("Company Name and Country are required.", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/add_company`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(companyData),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            showFeedback(
+              result.message || "Company added successfully!",
+              "success"
+            );
+            addForm.reset(); // Clear the form
+            fetchAndDisplayCompanies(); // Refresh the list
+          } else {
+            throw new Error(result.message || "Failed to add company.");
+          }
+        } catch (error) {
+          console.error("Error adding company:", error);
+          showFeedback(`Error: ${error.message}`, "error");
+        }
+      });
+
+      // ---- Event Listener for Filtering Companies ----
+      filterForm.addEventListener("submit", (event) => {
+        event.preventDefault(); // Prevent default form submission
+
+        const filters = {
+          company: document.getElementById("filterCompany").value.trim(),
+          country: document.getElementById("filterCountry").value.trim(),
+          position: document.getElementById("filterPosition").value, // Use the updated ID
+        };
+
+        // Remove empty filters
+        const activeFilters = Object.fromEntries(
+          Object.entries(filters).filter(([_, value]) => value !== "")
+        );
+
+        fetchAndDisplayCompanies(activeFilters);
+      });
+
+      // ---- Initial Load ----
+      // Fetch and display companies when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        fetchAndDisplayCompanies();
+      });
+    </script>
+  </body>
+</html>
